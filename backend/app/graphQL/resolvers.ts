@@ -9,8 +9,6 @@ const resolvers = {
   Query: {
     me: async (_: unknown, __: unknown, context: any) => {
       try {
-        console.log(context.userId);
-
         const user = await prisma.user.findUnique({
           where: { id: context.userId },
         });
@@ -32,6 +30,17 @@ const resolvers = {
     messages: async () => {
       const messages = await prisma.message.findMany();
       return messages;
+    },
+    getMessage: async (_: unknown, { id }: { id: string }, context: any) => {
+      if (!context.userId) {
+        throw new Error("User not authenticated");
+      }
+      const userId = context.userId;
+      const message = await prisma.message.findMany({
+        where: { receiver: id, sender: userId },
+        orderBy: { createdAt: "asc" },
+      });
+      return message;
     },
   },
   Mutation: {
@@ -67,7 +76,6 @@ const resolvers = {
         },
       });
 
-      console.log(user);
       if (!user) {
         throw new Error("User does not exist");
       }
@@ -83,18 +91,15 @@ const resolvers = {
       }
 
       const tokens = createUserTokens(user);
-      console.log(tokens);
-
       return tokens;
     },
     createMessage: async (
       _: any,
-      args: { content: string; receiver: string; sender: string },
-      context: any
+      args: { content: string; receiver: string; sender: string }
     ) => {
       const { content, sender, receiver } = args;
 
-      console.log("Received args:", args); // Debugging: Log the received arguments
+      console.log("Received args:", args);
 
       const message = await prisma.message.create({
         data: {

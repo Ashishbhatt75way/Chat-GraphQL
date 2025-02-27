@@ -29,7 +29,7 @@ export const typeDefs = gql`
     users: [User!]!
     me: User
     messages: [Message!]!
-    message(id: ID!): Message
+    getMessage(id: ID!): Message
   }
 
   type Mutation {

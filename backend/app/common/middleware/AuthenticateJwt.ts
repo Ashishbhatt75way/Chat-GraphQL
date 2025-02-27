@@ -11,7 +11,6 @@ export const authenticateJwt = async (req: Request) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: string;
     };
-    console.log("Decoded JWT:", decoded);
     return decoded;
   } catch (error) {
     console.error("JWT verification failed:", error);
