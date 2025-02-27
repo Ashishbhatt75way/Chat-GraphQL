@@ -1,18 +1,13 @@
-import { useLogoutMutation } from "@/services/api";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 export default function Authanticated() {
   const navigate = useNavigate();
-  const [logoutUser] = useLogoutMutation();
+  const logoutHandler = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
 
-  // React.useLayoutEffect(() => {
-
-  //   if (!accessToken) {
-  //     navigate("/login");
-  //   }
-  // }, [accessToken]);
-
-  // if (!accessToken) return null;
+    navigate("/login");
+  };
 
   return (
     <>
@@ -20,7 +15,7 @@ export default function Authanticated() {
         <div className="flex items-center justify-between mx-auto max-w-[1100px] w-full px-4">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center font-bold gap-2 cursor-pointer"
+            className="flex items-center font-bold gap-2  cursor-pointer"
           >
             Chit-Chat
           </button>
@@ -38,8 +33,7 @@ export default function Authanticated() {
             <button
               className="text-white bg-neutral-800 rounded-lg px-6 py-2"
               onClick={async () => {
-                await logoutUser();
-                navigate("/login");
+                logoutHandler(), navigate("/login");
               }}
             >
               Logout

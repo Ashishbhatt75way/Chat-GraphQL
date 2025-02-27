@@ -1,9 +1,8 @@
-
-```markdown
 # Chat Application
 
 ## Overview
-This is a chat application that allows users to communicate. The application provides a user-friendly interface for sending and receiving messages.
+This is a chat application that allows users to communicate. The application provides 
+a user-friendly interface for sending and receiving messages.
 
 ## Features
 - User authentication
