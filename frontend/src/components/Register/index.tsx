@@ -23,7 +23,6 @@ const signupSchema = yup.object().shape({
 type FormData = yup.InferType<typeof signupSchema>;
 
 const SignUp = () => {
-  // Use GraphQL Mutation
   const [signup, { loading }] = useMutation(SIGNUP_MUTATION);
   const navigate = useNavigate();
 
