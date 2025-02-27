@@ -1,4 +1,5 @@
 import { CREATE_MESSAGE_MUTATION, GET_ME, GET_USERS } from "@/graphQL/graphql";
+import { User } from "@/types";
 import { useMutation, useQuery } from "@apollo/client";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useEffect, useState } from "react";
@@ -7,9 +8,10 @@ import { toast } from "sonner";
 import * as yup from "yup";
 
 const ChatUsers = () => {
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { loading, error, data } = useQuery(GET_USERS);
   const { data: user } = useQuery(GET_ME);
+  const [userData, setUserData] = useState<User | null>(null);
 
   const messageSchema = yup.object().shape({
     message: yup.string().trim().required("Message is required"),
@@ -41,11 +43,15 @@ const ChatUsers = () => {
       return;
     }
 
+    console.log("Sender ID:", userData?.id);
+    console.log("Receiver ID:", selectedUser?.id);
+    console.log("Message Content:", formData.message);
+
     try {
       const { data } = await sendMessage({
         variables: {
-          sender: user.id,
-          receiver: selectedUser.id,
+          sender: userData?.id,
+          receiver: selectedUser?.id,
           content: formData.message,
         },
       });
@@ -55,6 +61,7 @@ const ChatUsers = () => {
         reset();
       }
     } catch (error) {
+      console.error("Error sending message:", error);
       toast.error("Error sending message.");
     }
   };
@@ -63,7 +70,9 @@ const ChatUsers = () => {
     if (data?.users?.length > 0) {
       console.log("Fetched Users:", data.users);
     }
-  }, [data]);
+
+    setUserData(user?.me);
+  }, [data, user]);
 
   if (loading) return <div className="p-6 text-gray-500">Loading users...</div>;
   if (error)
@@ -74,7 +83,7 @@ const ChatUsers = () => {
       <div className="w-1/3 bg-gray-100 p-4 border-r overflow-y-auto">
         <h2 className="text-3xl font-semibold mb-4 pl-5">Users</h2>
         <ul className="mt-9 flex flex-col gap-2">
-          {data?.users?.map((user) => (
+          {data?.users?.map((user: any) => (
             <li
               key={user.id}
               onClick={() => setSelectedUser(user)}

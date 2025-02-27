@@ -94,7 +94,8 @@ const resolvers = {
     ) => {
       const { content, sender, receiver } = args;
 
-      console.log(args);
+      console.log("Received args:", args); // Debugging: Log the received arguments
+
       const message = await prisma.message.create({
         data: {
           content,
