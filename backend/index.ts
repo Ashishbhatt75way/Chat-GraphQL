@@ -15,7 +15,7 @@ const prisma = new PrismaClient();
 
 interface Context {
   prisma: PrismaClient;
-  userId?: string;
+  userId?: string | undefined;
 }
 
 const server = new ApolloServer<Context>({
@@ -27,9 +27,13 @@ const startServer = async () => {
   initPassport(); // Initialize Passport strategies
 
   const { url } = await startStandaloneServer(server, {
-    listen: { port: 5000 },
+    listen: { port: 4001 },
     context: async ({ req }) => {
       const token = req.headers.authorization?.replace("Bearer ", "");
+
+      if (!token) {
+        return { prisma, userId: undefined };
+      }
 
       let userId: string | undefined;
 

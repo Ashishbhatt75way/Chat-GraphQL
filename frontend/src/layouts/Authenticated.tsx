@@ -1,13 +1,21 @@
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 export default function Authanticated() {
+  const isAuthenticated = useSelector((state: any) => state.auth);
   const navigate = useNavigate();
   const logoutHandler = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
-
     navigate("/login");
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated]);
 
   return (
     <>

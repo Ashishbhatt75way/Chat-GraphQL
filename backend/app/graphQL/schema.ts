@@ -1,22 +1,31 @@
 import { gql } from "apollo-server-express";
 
 export const typeDefs = gql`
+  enum UserRole {
+    ADMIN
+    USER
+  }
+
   type User {
     id: ID!
     name: String!
+    role: UserRole!
     password: String!
     active: Boolean!
     email: String!
-    messages: [Message!]!
+    messagesSent: [Message!]!
+    messagesReceived: [Message!]!
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Message {
     id: ID!
     content: String!
-    sender: String!
-    receiver: String!
-    user: User!
+    sender: User!
+    receiver: User!
     createdAt: String!
+    updatedAt: String!
   }
 
   type AuthPayload {
@@ -25,20 +34,15 @@ export const typeDefs = gql`
   }
 
   type Query {
-    hello: String
     users: [User!]!
     me: User
     messages: [Message!]!
-    getMessage(id: ID!): Message
+    getMessages(receiverId: String!): [Message!]
   }
 
   type Mutation {
     createUser(name: String!, email: String!, password: String!): User!
-    createMessage(
-      content: String!
-      sender: String!
-      receiver: String!
-    ): Message!
+    createMessage(content: String!, receiverId: String!): Message!
     login(email: String!, password: String!): AuthPayload
     refreshToken(refreshToken: String!): AuthPayload
   }

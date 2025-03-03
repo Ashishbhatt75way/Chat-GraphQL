@@ -1,4 +1,4 @@
-import { Message, PrismaClient, User } from "@prisma/client";
+import { PrismaClient, User, Message } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { createUserTokens } from "../common/services/passport-jwt.service";
@@ -9,6 +9,10 @@ const resolvers = {
   Query: {
     me: async (_: unknown, __: unknown, context: any) => {
       try {
+        if (!context.userId) {
+          throw new Error("User not authenticated");
+        }
+
         const user = await prisma.user.findUnique({
           where: { id: context.userId },
         });
@@ -24,57 +28,52 @@ const resolvers = {
       }
     },
     users: async () => {
-      const usersRes = await prisma.user.findMany();
-      return usersRes;
+      return await prisma.user.findMany();
     },
     messages: async () => {
-      const messages = await prisma.message.findMany();
-      return messages;
+      return await prisma.message.findMany();
     },
-    getMessage: async (_: unknown, { id }: { id: string }, context: any) => {
+    getMessages: async (
+      _: unknown,
+      { receiverId }: { receiverId: string },
+      context: any
+    ) => {
       if (!context.userId) {
         throw new Error("User not authenticated");
       }
-      const userId = context.userId;
-      const message = await prisma.message.findMany({
-        where: { receiver: id, sender: userId },
+
+      return await prisma.message.findMany({
+        where: {
+          OR: [
+            { senderId: context.userId, receiverId },
+            { senderId: receiverId, receiverId: context.userId },
+          ],
+        },
         orderBy: { createdAt: "asc" },
       });
-      return message;
     },
   },
   Mutation: {
     createUser: async (_: any, { email, password, name }: User) => {
-      const userExist = await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
+      const userExist = await prisma.user.findUnique({ where: { email } });
 
       if (userExist) {
         throw new Error("User already exists");
       }
 
-      const salt = await bcrypt.genSalt(10);
-      password = await bcrypt.hash(password, salt);
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-      const userRes = await prisma.user.create({
+      return await prisma.user.create({
         data: {
           email,
-          password,
+          password: hashedPassword,
           name,
           active: true,
         },
       });
-
-      return userRes;
     },
     login: async (_: any, { email, password }: User) => {
-      const user = await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
+      const user = await prisma.user.findUnique({ where: { email } });
 
       if (!user) {
         throw new Error("User does not exist");
@@ -90,28 +89,25 @@ const resolvers = {
         throw new Error("Invalid credentials");
       }
 
-      const tokens = createUserTokens(user);
-      return tokens;
+      return createUserTokens(user);
     },
     createMessage: async (
       _: any,
-      args: { content: string; receiver: string; sender: string }
+      { content, receiverId }: { content: string; receiverId: string },
+      context: any
     ) => {
-      const { content, sender, receiver } = args;
+      if (!context.userId) {
+        throw new Error("User not authenticated");
+      }
 
-      console.log("Received args:", args);
-
-      const message = await prisma.message.create({
+      return await prisma.message.create({
         data: {
           content,
-          sender,
-          receiver,
+          senderId: context.userId,
+          receiverId,
         },
       });
-
-      return message;
     },
-
     refreshToken: async (
       _: any,
       { refreshToken }: { refreshToken: string }
@@ -134,6 +130,16 @@ const resolvers = {
       } catch (error) {
         throw new Error("Invalid refresh token");
       }
+    },
+  },
+  Message: {
+    sender: async (message: Message) => {
+      return await prisma.user.findUnique({ where: { id: message.senderId } });
+    },
+    receiver: async (message: Message) => {
+      return await prisma.user.findUnique({
+        where: { id: message.receiverId },
+      });
     },
   },
 };

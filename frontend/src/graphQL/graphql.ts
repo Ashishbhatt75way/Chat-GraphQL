@@ -19,6 +19,16 @@ export const LOGIN_MUTATION = gql`
   }
 `;
 
+export const GET_ME = gql`
+  query me {
+    me {
+      id
+      name
+      email
+    }
+  }
+`;
+
 export const GET_USERS = gql`
   query users {
     users {
@@ -30,27 +40,36 @@ export const GET_USERS = gql`
 `;
 
 export const CREATE_MESSAGE_MUTATION = gql`
-  mutation createMessage(
-    $content: String!
-    $sender: String!
-    $receiver: String!
-  ) {
-    createMessage(content: $content, sender: $sender, receiver: $receiver) {
+  mutation createMessage($content: String!, $receiverId: String!) {
+    createMessage(content: $content, receiverId: $receiverId) {
       id
       content
-      sender
-      receiver
       createdAt
+      sender {
+        id
+        name
+      }
+      receiver {
+        id
+        name
+      }
     }
   }
 `;
 
-export const GET_ME = gql`
-  query me {
-    me {
-      id
-      name
-      email
+export const GET_MESSAGES_QUERY = gql`
+  query getMessages($receiverId: String!) {
+    getMessages(receiverId: $receiverId) {
+      content
+      createdAt
+      sender {
+        id
+        name
+      }
+      receiver {
+        id
+        name
+      }
     }
   }
 `;

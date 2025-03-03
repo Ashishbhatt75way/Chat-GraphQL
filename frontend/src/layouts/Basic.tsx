@@ -4,10 +4,12 @@ import { useAppSelector } from "../store/store";
 
 function Basic() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+
   const navigate = useNavigate();
   React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
+    console.log(isAuthenticated);
+    if (!isAuthenticated) {
+      navigate("/login");
     }
   }, [isAuthenticated]);
 
